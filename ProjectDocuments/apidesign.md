@@ -13,6 +13,10 @@
 * Current Version: None
 * Future Version: JWT Bearer Token
 
+> **Current Development Note**
+>
+> Authentication is not implemented yet. User IDs are currently passed through the API where required. Once JWT authentication is implemented, the backend will obtain the authenticated user from the security context instead of trusting a user ID supplied by the client.
+
 ---
 
 # Standard Response Format
@@ -24,7 +28,7 @@
   "success": true,
   "message": "Operation completed successfully.",
   "data": {},
-  "time": "2026-08-05T18:30:00"
+  "time": "2026-08-08T18:30:00"
 }
 ```
 
@@ -35,7 +39,7 @@
   "success": false,
   "error": "ResourceNotFoundException",
   "message": "Requested resource was not found.",
-  "time": "2026-08-05T18:30:00"
+  "time": "2026-08-08T18:30:00"
 }
 ```
 
@@ -71,13 +75,13 @@
 | email    | String | Yes      | Valid Email       |
 | password | String | Yes      | Min 8 Characters  |
 
-Example
+Example:
 
 ```json
 {
-    "name":"abc",
-    "email":"abc@gmail.com",
-    "password":"abc@123"
+  "name": "abc",
+  "email": "abc@gmail.com",
+  "password": "abc@123"
 }
 ```
 
@@ -91,16 +95,18 @@ Example
 | name  |
 | email |
 
-Status Code
+> Password is never returned in the response. The password is encoded before being stored in the database.
+
+### Status Code
 
 ```text
 201 Created
 ```
 
-Possible Errors
+### Possible Errors
 
 * 400 ValidationException
-* 409 EmailAlreadyExistsException
+* 409 EmailAlreadyRegisteredException
 
 ---
 
@@ -116,26 +122,33 @@ Possible Errors
 
 ### Query Parameters
 
-| Name      | Required | Description     |
-| --------- | -------- | --------------- |
-| page      | No       | Page Number     |
-| size      | No       | Page Size       |
-| sortBy    | No       | id, name, email |
-| direction | No       | asc, desc       |
+| Name      | Required | Default | Description                |
+| --------- | -------- | ------- | -------------------------- |
+| page      | No       | 0       | Page number                |
+| size      | No       | 5       | Number of records per page |
+| sortBy    | No       | ID      | Field used for sorting     |
+| direction | No       | DESC    | ASC or DESC                |
+
+### Pagination Rules
+
+* Negative page numbers are converted to `0`.
+* Page size below `1` defaults to `5`.
+* Page size cannot exceed the configured maximum.
+* Sorting is controlled through `sortBy` and `direction`.
 
 ### Response
 
 ```text
-Page<UserResponse>
+List<UserResponse>
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
 
 * 400 InvalidQueryParameterException
 
@@ -162,13 +175,13 @@ Possible Errors
 UserResponse
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
 
 * 404 UserNotFoundException
 
@@ -187,19 +200,26 @@ Possible Errors
 
 **UpdateUserRequest**
 
-| Field | Required |
-| ----- | -------- |
-| name  | Yes      |
-| email | Yes      |
+| Field | Type   | Required |
+| ----- | ------ | -------- |
+| name  | String | Yes      |
+| email | String | Yes      |
 
-Example
+### Example
 
 ```json
 {
-    "name":"Updated Name",
-    "email":"updated@gmail.com"
+  "name": "Updated Name",
+  "email": "updated@gmail.com"
 }
 ```
+
+### Behavior
+
+* User must exist.
+* Email must not already belong to another user.
+* Keeping the user's existing email is allowed.
+* Password is not updated through this endpoint.
 
 ### Response
 
@@ -207,17 +227,17 @@ Example
 UserResponse
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
 
 * 400 ValidationException
 * 404 UserNotFoundException
-* 409 EmailAlreadyExistsException
+* 409 EmailAlreadyRegisteredException
 
 ---
 
@@ -230,31 +250,71 @@ Possible Errors
 | Method   | DELETE        |
 | URL      | `/users/{id}` |
 
-Status Code
+### Status Code
 
 ```text
 204 No Content
 ```
 
-Possible Errors
+### Possible Errors
 
 * 404 UserNotFoundException
+
+### Relationship Behavior
+
+A User owns their Notes.
+
+When permanent user deletion is implemented, deleting a User is intended to delete the Notes belonging to that User through the JPA relationship cascade.
 
 ---
 
 # Note APIs
 
-> **Current Version**
->
-> User authentication is not implemented yet, therefore `userId` is passed in the URL.
->
-> After JWT authentication is added, the backend will obtain the user from the authenticated request and `userId` will be removed from these endpoints.
-
-**Base URL**
+**Current Base URL**
 
 ```text
-/api/v1/users/{userId}/notes
+/api/v1/notes
 ```
+
+> **Current Development Note**
+>
+> Authentication is not implemented yet. The user ID is therefore passed in the URL when creating or retrieving notes belonging to a specific user.
+>
+> The current implementation uses:
+>
+> ```text
+> /notes/users/{userId}
+> ```
+>
+> This can later be simplified when JWT authentication is introduced.
+
+---
+
+# Note Data Rules
+
+### Title
+
+* Required
+* Cannot be `null`
+* Cannot be empty
+* Cannot contain only whitespace
+
+### Content
+
+* Required
+* Cannot be `null`
+* Empty content is allowed
+
+Example of a valid empty note:
+
+```json
+{
+  "title": "Spring Boot",
+  "content": ""
+}
+```
+
+This allows a note to be created before the user starts writing its content.
 
 ---
 
@@ -265,25 +325,29 @@ Possible Errors
 | Property | Value                   |
 | -------- | ----------------------- |
 | Method   | POST                    |
-| URL      | `/users/{userId}/notes` |
+| URL      | `/notes/users/{userId}` |
+
+### Path Variables
+
+| Name   | Type |
+| ------ | ---- |
+| userId | Long |
 
 ### Request DTO
 
 **CreateNoteRequest**
 
-| Field    | Type   | Required |
-| -------- | ------ | -------- |
-| title    | String | Yes      |
-| content  | String | Yes      |
-| folderId | Long   | No       |
+| Field   | Type   | Required |
+| ------- | ------ | -------- |
+| title   | String | Yes      |
+| content | String | Yes      |
 
-Example
+### Example
 
 ```json
 {
-    "title":"Java Programming",
-    "content":"Spring Boot Notes...",
-    "folderId":3
+  "title": "Java Programming",
+  "content": "Spring Boot Notes..."
 }
 ```
 
@@ -298,19 +362,20 @@ Example
 | content   |
 | createdAt |
 | updatedAt |
-| folderId  |
+| userId    |
 
-Status Code
+### Status Code
 
 ```text
 201 Created
 ```
 
-Possible Errors
+### Possible Errors
 
 * 400 ValidationException
 * 404 UserNotFoundException
-* 404 FolderNotFoundException
+
+> `folderId` will be added when the Folder entity and Note → Folder relationship are implemented.
 
 ---
 
@@ -318,35 +383,206 @@ Possible Errors
 
 ### Endpoint
 
-| Property | Value                   |
-| -------- | ----------------------- |
-| Method   | GET                     |
-| URL      | `/users/{userId}/notes` |
+| Property | Value    |
+| -------- | -------- |
+| Method   | GET      |
+| URL      | `/notes` |
 
 ### Query Parameters
 
-| Name      | Required | Description                     |
-| --------- | -------- | ------------------------------- |
-| page      | No       | Page Number                     |
-| size      | No       | Page Size                       |
-| sortBy    | No       | id, title, createdAt, updatedAt |
-| direction | No       | asc, desc                       |
-| title     | No       | Search by title                 |
-| folderId  | No       | Filter by folder                |
+| Name      | Required | Default | Description                     |
+| --------- | -------- | ------- | ------------------------------- |
+| page      | No       | 0       | Page number                     |
+| size      | No       | 5       | Number of records per page      |
+| sortBy    | No       | ID      | id, title, createdAt, updatedAt |
+| direction | No       | ASC     | ASC or DESC                     |
+
+### Pagination Rules
+
+* Negative page numbers are converted to `0`.
+* Page size below `1` defaults to `5`.
+* Page size cannot exceed the configured maximum.
+* Sorting is supported.
 
 ### Response
 
 ```text
-Page<NoteResponse>
+List<NoteResponse>
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
+
+* 400 InvalidQueryParameterException
+
+> Pagination currently returns a `List<NoteResponse>`. The implementation may later return `Page<NoteResponse>` so pagination metadata such as total elements and total pages can be exposed.
+
+---
+
+## Get Lightweight Note List
+
+This endpoint is intended for UI components that only need to display a list of notes without loading potentially large note content.
+
+### Endpoint
+
+| Property | Value          |
+| -------- | -------------- |
+| Method   | GET            |
+| URL      | `/notes/names` |
+
+### Query Parameters
+
+| Name      | Required | Default | Description       |
+| --------- | -------- | ------- | ----------------- |
+| page      | No       | 0       | Page number       |
+| size      | No       | 5       | Number of records |
+| sortBy    | No       | ID      | Sort field        |
+| direction | No       | ASC     | ASC or DESC       |
+
+### Response DTO
+
+**NoteNameResponse**
+
+| Field |
+| ----- |
+| id    |
+| title |
+
+### Example Response Data
+
+```json
+[
+  {
+    "id": 1,
+    "title": "Spring Boot"
+  },
+  {
+    "id": 2,
+    "title": "JPA Relationships"
+  }
+]
+```
+
+### Status Code
+
+```text
+200 OK
+```
+
+---
+
+## Get Notes Belonging To A User
+
+### Endpoint
+
+| Property | Value                   |
+| -------- | ----------------------- |
+| Method   | GET                     |
+| URL      | `/notes/users/{userId}` |
+
+### Path Variables
+
+| Name   | Type |
+| ------ | ---- |
+| userId | Long |
+
+### Query Parameters
+
+| Name      | Required | Default | Description                     |
+| --------- | -------- | ------- | ------------------------------- |
+| page      | No       | 0       | Page number                     |
+| size      | No       | 5       | Number of records per page      |
+| sortBy    | No       | ID      | id, title, createdAt, updatedAt |
+| direction | No       | ASC     | ASC or DESC                     |
+
+### Response
+
+```text
+List<NoteResponse>
+```
+
+### Status Code
+
+```text
+200 OK
+```
+
+### Possible Errors
+
+* 400 InvalidQueryParameterException
+* 404 UserNotFoundException
+
+### Implementation
+
+Notes are retrieved directly using the user's ID rather than loading the user's entire `userNotes` collection.
+
+Conceptually:
+
+```text
+User ID
+   ↓
+NoteRepository.findByUserId(...)
+   ↓
+Page<Note>
+   ↓
+Page/List<NoteResponse>
+```
+
+---
+
+## Get Lightweight Notes Belonging To A User
+
+This endpoint is intended for displaying a user's note list without loading note content.
+
+### Endpoint
+
+| Property | Value                         |
+| -------- | ----------------------------- |
+| Method   | GET                           |
+| URL      | `/notes/users/{userId}/names` |
+
+### Path Variables
+
+| Name   | Type |
+| ------ | ---- |
+| userId | Long |
+
+### Query Parameters
+
+| Name      | Required | Default | Description       |
+| --------- | -------- | ------- | ----------------- |
+| page      | No       | 0       | Page number       |
+| size      | No       | 5       | Number of records |
+| sortBy    | No       | ID      | Sort field        |
+| direction | No       | ASC     | ASC or DESC       |
+
+### Response DTO
+
+**NoteNameResponse**
+
+| Field |
+| ----- |
+| id    |
+| title |
+
+### Response
+
+```text
+List<NoteNameResponse>
+```
+
+### Status Code
+
+```text
+200 OK
+```
+
+### Possible Errors
 
 * 400 InvalidQueryParameterException
 * 404 UserNotFoundException
@@ -362,19 +598,25 @@ Possible Errors
 | Method   | GET           |
 | URL      | `/notes/{id}` |
 
+### Path Variables
+
+| Name | Type |
+| ---- | ---- |
+| id   | Long |
+
 ### Response
 
 ```text
 NoteResponse
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
 
 * 404 NoteNotFoundException
 
@@ -389,15 +631,38 @@ Possible Errors
 | Method   | PUT           |
 | URL      | `/notes/{id}` |
 
+### Path Variables
+
+| Name | Type |
+| ---- | ---- |
+| id   | Long |
+
 ### Request DTO
 
 **UpdateNoteRequest**
 
-| Field    | Required |
-| -------- | -------- |
-| title    | Yes      |
-| content  | Yes      |
-| folderId | No       |
+| Field   | Type   | Required |
+| ------- | ------ | -------- |
+| title   | String | Yes      |
+| content | String | Yes      |
+
+### Example
+
+```json
+{
+  "title": "Updated Spring Boot Notes",
+  "content": "Updated content..."
+}
+```
+
+### Behavior
+
+The endpoint replaces the editable note fields:
+
+* title
+* content
+
+The `updatedAt` timestamp is updated when the note is modified.
 
 ### Response
 
@@ -405,17 +670,16 @@ Possible Errors
 NoteResponse
 ```
 
-Status Code
+### Status Code
 
 ```text
 200 OK
 ```
 
-Possible Errors
+### Possible Errors
 
 * 400 ValidationException
 * 404 NoteNotFoundException
-* 404 FolderNotFoundException
 
 ---
 
@@ -428,12 +692,161 @@ Possible Errors
 | Method   | DELETE        |
 | URL      | `/notes/{id}` |
 
-Status Code
+### Path Variables
+
+| Name | Type |
+| ---- | ---- |
+| id   | Long |
+
+### Status Code
 
 ```text
 204 No Content
 ```
 
-Possible Errors
+### Possible Errors
 
 * 404 NoteNotFoundException
+
+> Future versions may replace permanent deletion with soft deletion/recycle-bin behavior.
+
+---
+
+# Current Entity Relationships
+
+## User → Note
+
+```text
+User 1 ─────────── * Note
+```
+
+### User
+
+```text
+User
+├── id
+├── name
+├── email
+├── password
+└── userNotes
+```
+
+### Note
+
+```text
+Note
+├── id
+├── title
+├── content
+├── createdAt
+├── updatedAt
+└── user
+```
+
+The `Note` owns the database relationship through:
+
+```java
+@ManyToOne
+@JoinColumn(name = "user_id", nullable = false)
+private User user;
+```
+
+The `User` contains the inverse relationship:
+
+```java
+@OneToMany(mappedBy = "user")
+private List<Note> userNotes;
+```
+
+---
+
+# Planned Entities
+
+The following entities are planned but are **not implemented yet**:
+
+* Folder
+* Attachment
+* Tag
+* Study Session
+* Flashcard
+
+Planned relationships will be designed before implementation.
+
+---
+
+# Planned Features
+
+## Folder
+
+* Create folder
+* Update folder
+* Delete folder
+* List folders
+* Assign notes to folders
+* Move notes between folders
+
+## Attachments
+
+* Attach files to notes
+* Store attachment metadata in database
+* Store actual files separately
+* Retrieve attachment information
+
+## Tags
+
+* Create and manage tags
+* Assign multiple tags to notes
+* Filter notes by tags
+
+## Search
+
+Planned search capabilities:
+
+* Search notes by title
+* Search notes by content
+* Filter by folder
+* Filter by tags
+
+## Learning Features
+
+Future phases:
+
+* Study sessions
+* Spaced repetition
+* Flashcards
+* Quizzes
+* Note summaries
+
+## AI Features
+
+Future phase:
+
+* Note summarization
+* Automatic tag generation
+* Study question generation
+* Knowledge extraction
+
+---
+
+# API Design Principles
+
+1. Request and response models are separated.
+
+```text
+CreateNoteRequest
+UpdateNoteRequest
+NoteResponse
+NoteNameResponse
+```
+
+2. JPA entities are not directly exposed through API responses.
+
+3. Large note content should not be returned when only note identification information is required.
+
+4. Pagination and sorting are supported for collection endpoints.
+
+5. User-owned resources will eventually be protected through JWT authentication.
+
+6. Resource relationships should not automatically imply nested response DTOs. Each response should contain only the information required by that API.
+
+7. Entity relationships and deletion behavior will be explicitly defined before adding new entities.

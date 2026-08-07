@@ -1,11 +1,9 @@
 package com.example.demo.response;
 
-import com.example.demo.dtos.NoteDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor

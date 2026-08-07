@@ -1,5 +1,7 @@
 package com.example.demo.entities;
+import com.example.demo.dtos.NoteResponse;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -17,15 +19,24 @@ public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @NotNull
-    @NotEmpty
+    @NotBlank
     private String title;
     @NotNull
-    @NotEmpty
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @ManyToOne
     @JoinColumn(name = "user_id" , nullable = false)
     User user;
+
+    public NoteResponse toDTO(){
+        NoteResponse noteResponse= new NoteResponse();
+        noteResponse.setId(this.id);
+        noteResponse.setTitle(this.title);
+        noteResponse.setContent(this.content);
+        noteResponse.setCreatedAt(this.createdAt);
+        noteResponse.setUpdatedAt(this.updatedAt);
+        noteResponse.setUserId(this.user.getId());
+        return noteResponse;
+    }
 }
