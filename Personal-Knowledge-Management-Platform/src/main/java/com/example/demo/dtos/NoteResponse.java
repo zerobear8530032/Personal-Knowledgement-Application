@@ -1,7 +1,6 @@
 package com.example.demo.dtos;
 
 import com.example.demo.entities.Note;
-import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,7 +16,7 @@ import java.time.LocalDateTime;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class NoteDTO {
+public class NoteResponse {
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO)
         private Long id;
@@ -34,23 +33,23 @@ public class NoteDTO {
 
         Long  userId;
 
-        public static NoteDTO toDTO(Note note){
-            NoteDTO noteDTO= new NoteDTO();
-            noteDTO.setId(note.getId());
-            noteDTO.setTitle(note.getTitle());
-            noteDTO.setContent(note.getContent());
-            noteDTO.setCreatedAt(note.getCreatedAt());
-            noteDTO.setUpdatedAt(note.getUpdatedAt());
-            noteDTO.setUserId(note.getUser().getId());
-            return noteDTO;
+        public static NoteResponse toDTO(Note note){
+            NoteResponse noteResponse = new NoteResponse();
+            noteResponse.setId(note.getId());
+            noteResponse.setTitle(note.getTitle());
+            noteResponse.setContent(note.getContent());
+            noteResponse.setCreatedAt(note.getCreatedAt());
+            noteResponse.setUpdatedAt(note.getUpdatedAt());
+            noteResponse.setUserId(note.getUser().getId());
+            return noteResponse;
         }
-        public static Note toEntity(NoteDTO noteDTO){
+        public static Note toEntity(NoteResponse noteResponse){
             Note note= new Note();
-            note.setId(noteDTO.getId());
-            note.setTitle(noteDTO.getTitle());
-            note.setContent(noteDTO.getContent());
-            note.setCreatedAt(noteDTO.getCreatedAt());
-            note.setUpdatedAt(noteDTO.getUpdatedAt());
+            note.setId(noteResponse.getId());
+            note.setTitle(noteResponse.getTitle());
+            note.setContent(noteResponse.getContent());
+            note.setCreatedAt(noteResponse.getCreatedAt());
+            note.setUpdatedAt(noteResponse.getUpdatedAt());
             return note;
         }
 }

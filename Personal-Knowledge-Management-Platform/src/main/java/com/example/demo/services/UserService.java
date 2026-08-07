@@ -1,32 +1,23 @@
 package com.example.demo.services;
 
-import com.example.demo.dtos.NoteDTO;
-import com.example.demo.dtos.RegisterUserDTO;
-import com.example.demo.dtos.UpdateUserDTO;
-import com.example.demo.dtos.UserDTO;
-import com.example.demo.entities.Note;
+import com.example.demo.dtos.RegisterUserRequest;
+import com.example.demo.dtos.UpdateUserRequest;
+import com.example.demo.dtos.UserResponse;
 import com.example.demo.entities.User;
-import com.example.demo.exceptions.NoteNotFoundException;
+import com.example.demo.exceptions.EmailAlreadyRegisteredException;
 import com.example.demo.exceptions.UserNotFoundException;
 import com.example.demo.repositories.UserRepository;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Data
@@ -42,35 +33,52 @@ public class UserService {
 
 
     @Transactional
-    public UserDTO registerUser(RegisterUserDTO registerUser){
+    public UserResponse registerUser(RegisterUserRequest registerUser){
+        String email = registerUser.getEmail();
+        Optional<User> emailUser= userRepository.findByEmail(email);
+        if(emailUser.isPresent()){
+            throw new EmailAlreadyRegisteredException("Email : "+email+" Already registered");
+        }
+        registerUser.setPassword(encryptPassword(registerUser.getPassword()));
         User user= registerUser.toEntity();
         User savedUser=userRepository.save(user);
-        return UserDTO.toDTO(savedUser);
-    }
-    @Transactional
-    public UserDTO getUser(Long id){
-        User user=userRepository.findById(id).orElseThrow(()-> new UserNotFoundException(" User ID "+id+" Not Found"));
-        return UserDTO.toDTO(user);
+        return UserResponse.toDTO(savedUser);
     }
 
     @Transactional
-    public List<UserDTO> getAllUsers(PageRequest pageRequest){
-        final UserDTO mapper= new UserDTO();
-        List<UserDTO> users= userRepository.findAll(pageRequest).stream().map(user -> mapper.toDTO(user)).toList();
+    public UserResponse getUser(Long id){
+        User user=userRepository.findById(id).orElseThrow(()-> new UserNotFoundException(" User ID "+id+" Not Found"));
+        return UserResponse.toDTO(user);
+    }
+
+    @Transactional
+    public List<UserResponse> getAllUsers(PageRequest pageRequest){
+        final UserResponse mapper= new UserResponse();
+        List<UserResponse> users= userRepository.findAll(pageRequest).stream().map(user -> mapper.toDTO(user)).toList();
         return  users;
     }
+
     @Transactional
-    public UserDTO updateUser(Long id, UpdateUserDTO updateUserDTO){
+    public UserResponse updateUser(Long id, UpdateUserRequest updateUserRequest){
         User user= userRepository.findById(id).orElseThrow(()->new UserNotFoundException("User ID "+id+" not present in the Database"));
-        user.setName(updateUserDTO.getName());
-        user.setEmail(updateUserDTO.getEmail());
+        user.setName(updateUserRequest.getName());
+        String email = updateUserRequest.getEmail();
+        Optional<User> existing = userRepository.findByEmail(email);
+        if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+            throw new EmailAlreadyRegisteredException("Email : "+email+" Already registered");
+        }
+        user.setEmail(email);
         userRepository.save(user);
-        return UserDTO.toDTO(user);
+        return UserResponse.toDTO(user);
     }
     @Transactional
     public void deleteUser(Long id){
         User user=userRepository.findById(id).orElseThrow(()-> new UserNotFoundException(" User ID "+id+" Not Found"));
         userRepository.deleteById(id);
+    }
+
+    public String encryptPassword(String password){
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     private String message(String name){

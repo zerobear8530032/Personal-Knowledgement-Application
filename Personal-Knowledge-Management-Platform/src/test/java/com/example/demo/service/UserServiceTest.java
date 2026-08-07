@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.dtos.RegisterUserDTO;
-import com.example.demo.dtos.UserDTO;
+import com.example.demo.dtos.RegisterUserRequest;
+import com.example.demo.dtos.UserResponse;
 import com.example.demo.entities.User;
 import com.example.demo.exceptions.UserNotFoundException;
 import com.example.demo.repositories.UserRepository;
@@ -56,12 +56,12 @@ public class UserServiceTest {
     public void registerUserTest1(){
 //        prepration
         System.out.println("register user test1");
-        RegisterUserDTO registerUserDto= new RegisterUserDTO("abc@gmail.com","123@123","zerobear");
-        User user = new User(5L,registerUserDto.getName(),registerUserDto.getEmail(),registerUserDto.getPassword());
+        RegisterUserRequest registerUserRequest = new RegisterUserRequest("abc@gmail.com","123@123","zerobear");
+        User user = new User(5L, registerUserRequest.getName(), registerUserRequest.getEmail(), registerUserRequest.getPassword());
 //        mocking output
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 //        actual calls
-        UserDTO userDto=userService.registerUser(registerUserDto);
+        UserResponse userDto=userService.registerUser(registerUserRequest);
 //        assertions
         Assertions.assertEquals(user.getId(),userDto.getId());
         Assertions.assertEquals(user.getName(),userDto.getName());
@@ -72,12 +72,12 @@ public class UserServiceTest {
     public void registerUserTest2(){
 //        prepration
         System.out.println("register user test 2");
-        RegisterUserDTO registerUserDto= new RegisterUserDTO("abc@gmail.com","123@123","zerobear");
-        User user = new User(5L,registerUserDto.getName(),registerUserDto.getEmail(),registerUserDto.getPassword());
+        RegisterUserRequest registerUserRequest = new RegisterUserRequest("abc@gmail.com","123@123","zerobear");
+        User user = new User(5L, registerUserRequest.getName(), registerUserRequest.getEmail(), registerUserRequest.getPassword());
 //        mocking output
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 //        actual calls
-        UserDTO userDto=userService.registerUser(registerUserDto);
+        UserResponse userDto=userService.registerUser(registerUserRequest);
 //        assertions
         Assertions.assertEquals(user.getId(),userDto.getId());
         Assertions.assertEquals(user.getName(),userDto.getName());

@@ -1,6 +1,5 @@
 package com.example.demo.dtos;
 
-import com.example.demo.entities.Note;
 import com.example.demo.entities.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -17,7 +16,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
+public class UserResponse {
     private Long id;
     private String name;
     @Email
@@ -26,17 +25,16 @@ public class UserDTO {
     @Size(min = 6,max=100)
     private String email;
 
-    private List<Long> noteDTO;
 
-    public static UserDTO toDTO(User user){
+    public static UserResponse toDTO(User user){
         if(user==null){
             return  null;
         }
         List<Long> noteDTOList= user.getUserNotes()!= null ? user.getUserNotes().stream().map((note)->note.getId()).toList() : null;
-        UserDTO userDTO= new UserDTO(user.getId(),user.getName(),user.getEmail(),noteDTOList);
+        UserResponse userDTO= new UserResponse(user.getId(),user.getName(),user.getEmail());
         return userDTO;
     }
-    public static User toEntity(UserDTO userDTO) {
+    public static User toEntity(UserResponse userDTO) {
         if (userDTO == null) {
             return null;
         }

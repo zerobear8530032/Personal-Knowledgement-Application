@@ -1,0 +1,10 @@
+package com.example.demo.exceptions;
+
+public class EmailAlreadyRegisteredException extends RuntimeException {
+    public EmailAlreadyRegisteredException(String message) {
+        super(message);
+    }
+    public EmailAlreadyRegisteredException() {
+        super();
+    }
+}
