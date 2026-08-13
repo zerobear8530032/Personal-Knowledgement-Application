@@ -31,7 +31,8 @@ public class NoteResponse {
         @NotNull
         private LocalDateTime updatedAt;
 
-        Long  userId;
+        private Long  userId;
+        private Long folderId;
 
         public static NoteResponse toDTO(Note note){
             NoteResponse noteResponse = new NoteResponse();
@@ -41,6 +42,9 @@ public class NoteResponse {
             noteResponse.setCreatedAt(note.getCreatedAt());
             noteResponse.setUpdatedAt(note.getUpdatedAt());
             noteResponse.setUserId(note.getUser().getId());
+            if(note.getFolder()!=null){
+                noteResponse.setFolderId(note.getFolder().getId());
+            }
             return noteResponse;
         }
         public static Note toEntity(NoteResponse noteResponse){

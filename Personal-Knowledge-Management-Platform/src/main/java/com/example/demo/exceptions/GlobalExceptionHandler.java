@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = {NoteNotFoundException.class, UserNotFoundException.class})
+    @ExceptionHandler(value = {NoteNotFoundException.class, UserNotFoundException.class,FolderDoesNotExistException.class})
     public ResponseEntity<ErrorResponse> notFoundErrorsHandlers(Exception e){
         ErrorResponse response= new ErrorResponse(false,"resource not found",e.getMessage(), LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
@@ -30,6 +30,17 @@ public class GlobalExceptionHandler {
                 )
         );
     }
+    @ExceptionHandler(value = {EmailAlreadyRegisteredException.class})
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(
+            EmailAlreadyRegisteredException ex) {
+
+        return ResponseEntity.badRequest().body(
+                ErrorResponse.unsuccessfull(
+                        "Email should be unique" ,ex,ex.getMessage()
+                )
+        );
+    }
+
 //    @ExceptionHandler(Exception.class)
 //    public ResponseEntity<ErrorResponse> unknownExceptionHandler(Exception e){
 //        ErrorResponse response= new ErrorResponse(false,"Some thing rare happened",e.getMessage(), LocalDateTime.now());

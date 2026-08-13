@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Fetch;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,4 +41,10 @@ public class Note {
         noteResponse.setUserId(this.user.getId());
         return noteResponse;
     }
+
+    @ManyToOne(optional = true , fetch = FetchType.LAZY)
+    Folder folder;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    Attach
 }

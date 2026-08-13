@@ -9,6 +9,7 @@ import com.example.demo.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(@RequestParam(name="page",required = false ,defaultValue = "0") int page, @RequestParam(name="size",required = false,defaultValue ="5") int size, @RequestParam(name="sortBy",required = false,defaultValue = "ID") UserEnum sortBy, @RequestParam(name="direction",required = false,defaultValue = "DESC")Sort.Direction direction){
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(@RequestParam(name="page",required = false ,defaultValue = "0") int page, @RequestParam(name="size",required = false,defaultValue ="5") int size, @RequestParam(name="sortBy",required = false,defaultValue = "ID") UserEnum sortBy, @RequestParam(name="direction",required = false,defaultValue = "DESC")Sort.Direction direction){
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -46,7 +46,7 @@ public class UserController {
         }
         Sort sort=Sort.by(direction,sortBy.getValue());
         PageRequest pageRequest= PageRequest.of(page,size,sort);
-        List<UserResponse> users=userService.getAllUsers(pageRequest);
+        Page<UserResponse> users=userService.getAllUsers(pageRequest);
         return ResponseEntity.ok(ApiResponse.success("Fetch all users successfully",users));
     }
 

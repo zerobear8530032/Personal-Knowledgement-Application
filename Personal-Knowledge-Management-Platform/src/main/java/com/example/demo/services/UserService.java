@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -52,9 +53,9 @@ public class UserService {
     }
 
     @Transactional
-    public List<UserResponse> getAllUsers(PageRequest pageRequest){
+    public Page<UserResponse> getAllUsers(PageRequest pageRequest){
         final UserResponse mapper= new UserResponse();
-        List<UserResponse> users= userRepository.findAll(pageRequest).stream().map(user -> mapper.toDTO(user)).toList();
+        Page<UserResponse> users= userRepository.findAll(pageRequest).map(user -> mapper.toDTO(user));
         return  users;
     }
 
