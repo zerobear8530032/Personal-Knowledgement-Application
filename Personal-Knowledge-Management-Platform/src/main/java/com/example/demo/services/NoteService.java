@@ -1,10 +1,13 @@
 package com.example.demo.services;
 
 import com.example.demo.dtos.*;
+import com.example.demo.entities.Folder;
 import com.example.demo.entities.Note;
 import com.example.demo.entities.User;
+import com.example.demo.exceptions.FolderDoesNotExistException;
 import com.example.demo.exceptions.NoteNotFoundException;
 import com.example.demo.exceptions.UserNotFoundException;
+import com.example.demo.repositories.FolderRepository;
 import com.example.demo.repositories.NoteRepository;
 import com.example.demo.repositories.UserRepository;
 import lombok.Data;
@@ -26,34 +29,41 @@ public class NoteService {
 
     private NoteRepository noteRepository;
     private UserRepository userRepository;
+    private FolderRepository folderRepository;
+
 
     @Autowired
-    public NoteService(NoteRepository noteRepository,UserRepository userRepository){
+    public NoteService(NoteRepository noteRepository, UserRepository userRepository, FolderRepository folderRepository){
        this.noteRepository=noteRepository;
        this.userRepository=userRepository;
+       this.folderRepository=folderRepository;
     }
 
 
-    public List<NoteResponse> getAllUserNotes(Long id, Pageable pageable){
-        List<NoteResponse> noteResponses= noteRepository.findByUserId(id,pageable).stream().map((p)->p.toDTO()).toList();
+    public Page<NoteResponse> getAllUserNotes(Long id, Pageable pageable){
+        Page<NoteResponse> noteResponses= noteRepository.findByUserId(id,pageable).map((p)->p.toDTO());
         return noteResponses;
     }
 
-    public List<NoteNameResponse> getAllUserNotesNames(Long id, Pageable pageable){
-        List<NoteNameResponse> noteResponses= noteRepository.findByUserId(id,pageable).stream().map((p)->new NoteNameResponse(p.getId(),p.getTitle())).toList();
+    public Page<NoteNameResponse> getAllUserNotesNames(Long id, Pageable pageable){
+        Page<NoteNameResponse> noteResponses= noteRepository.findByUserId(id,pageable).map((p)->new NoteNameResponse(p.getId(),p.getTitle()));
         return noteResponses;
     }
 
     public NoteService(){}
     @Transactional
-    public NoteResponse createNote(CreateNoteRequest newNote, Long id){
-        User user= userRepository.findById(id).orElseThrow(()-> new UserNotFoundException("User Id "+id+" does not exists in databae"));
+    public NoteResponse createNote(CreateNoteRequest newNote, Long userId){
+        User user= userRepository.findById(userId).orElseThrow(()-> new UserNotFoundException("User Id "+userId+" does not exists in databae"));
         Note note= newNote.toEntity();
+        if(newNote.getFolderId()!=null){
+            Folder folder= folderRepository.findByIdAndUserId(newNote.getFolderId(),userId).orElseThrow(()->new FolderDoesNotExistException("Folder does not exists "));
+        note.setFolder(folder);
+        }
         note.setCreatedAt(LocalDateTime.now());
         note.setUpdatedAt(LocalDateTime.now());
         note.setUser(user);
         Note savedNote=noteRepository.save(note);
-        return NoteResponse.toDTO(savedNote);
+        return savedNote.toDTO();
     }
     @Transactional(readOnly = true)
     public NoteResponse getNote(Long id){
@@ -62,15 +72,15 @@ public class NoteService {
     }
 
     @Transactional(readOnly = true)
-    public List<NoteResponse> getAllNotes(PageRequest pageRequest){
+    public Page<NoteResponse> getAllNotes(PageRequest pageRequest){
         NoteResponse mapper= new NoteResponse();
-        List<NoteResponse> notes= noteRepository.findAll(pageRequest).stream().map(note -> mapper.toDTO(note)).toList();
+        Page<NoteResponse> notes= noteRepository.findAll(pageRequest).map(note -> mapper.toDTO(note));
         return  notes;
     }
 
     @Transactional(readOnly = true)
-    public List<NoteNameResponse> getAllNotesName(PageRequest pageRequest){
-        List<NoteNameResponse> notes= noteRepository.findAll(pageRequest).stream().map(note -> new NoteNameResponse(note.getId(),note.getTitle())).toList();
+    public Page<NoteNameResponse> getAllNotesName(PageRequest pageRequest){
+        Page<NoteNameResponse> notes= noteRepository.findAll(pageRequest).map(note -> new NoteNameResponse(note.getId(),note.getTitle()));
         return  notes;
     }
 

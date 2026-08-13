@@ -757,6 +757,280 @@ The `User` contains the inverse relationship:
 @OneToMany(mappedBy = "user")
 private List<Note> userNotes;
 ```
+# Folder APIs
+
+## Base URL
+
+```text
+/api/v1/users/{userId}/folders
+```
+
+## Folder Relationship
+
+A User can own multiple Folders.
+
+```text
+User 1 ─────────── * Folder
+```
+
+The relationship is currently **unidirectional** from `Folder → User`.
+
+```java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "user_id", nullable = false)
+private User user;
+```
+
+The `User` entity does not maintain a `folders` collection.
+
+---
+
+## Folder Data
+
+```text
+Folder
+├── id
+├── name
+├── color
+├── createdAt
+├── isDeleted
+└── user
+```
+
+---
+
+## Create Folder
+
+### Endpoint
+
+| Property | Value                     |
+| -------- | ------------------------- |
+| Method   | POST                      |
+| URL      | `/users/{userId}/folders` |
+
+### Path Variables
+
+| Name   | Type |
+| ------ | ---- |
+| userId | Long |
+
+### Request DTO
+
+**FolderRequest**
+
+```json
+{
+  "folderName": "DSA"
+}
+```
+
+### Response DTO
+
+**FolderResponse**
+
+Contains the folder information returned by `Folder.toDTO()`.
+
+### Status Code
+
+```text
+201 Created
+```
+
+### Possible Errors
+
+* 404 UserNotFoundException
+
+---
+
+## Get All User Folders
+
+### Endpoint
+
+| Property | Value                     |
+| -------- | ------------------------- |
+| Method   | GET                       |
+| URL      | `/users/{userId}/folders` |
+
+### Path Variables
+
+| Name   | Type |
+| ------ | ---- |
+| userId | Long |
+
+### Behavior
+
+Returns all **non-deleted folders** belonging to the specified user.
+
+Deleted folders are excluded using:
+
+```text
+findByUserIdAndIsDeletedFalse(userId)
+```
+
+Pagination is not currently used because the number of folders for a user is expected to remain relatively small compared with notes.
+
+### Response
+
+```text
+List<FolderResponse>
+```
+
+### Status Code
+
+```text
+200 OK
+```
+
+---
+
+## Rename Folder
+
+### Endpoint
+
+| Property | Value                                |
+| -------- | ------------------------------------ |
+| Method   | PUT                                  |
+| URL      | `/users/{userId}/folders/{folderId}` |
+
+### Path Variables
+
+| Name     | Type |
+| -------- | ---- |
+| userId   | Long |
+| folderId | Long |
+
+### Request DTO
+
+**FolderRequest**
+
+```json
+{
+  "folderName": "Advanced DSA"
+}
+```
+
+### Behavior
+
+The folder can only be renamed when:
+
+* The folder exists.
+* The folder belongs to the specified user.
+* The folder has not been deleted.
+
+The repository lookup uses:
+
+```text
+findByIdAndUserIdAndIsDeletedFalse(folderId, userId)
+```
+
+### Response
+
+```text
+FolderResponse
+```
+
+### Status Code
+
+```text
+200 OK
+```
+
+### Possible Errors
+
+* 404 FolderDoesNotExistException
+
+---
+
+## Delete Folder
+
+### Endpoint
+
+| Property | Value                                |
+| -------- | ------------------------------------ |
+| Method   | DELETE                               |
+| URL      | `/users/{userId}/folders/{folderId}` |
+
+### Path Variables
+
+| Name     | Type |
+| -------- | ---- |
+| userId   | Long |
+| folderId | Long |
+
+### Behavior
+
+Folders use **soft deletion**.
+
+Deleting a folder does not physically remove it from the database. Instead:
+
+```text
+isDeleted = true
+```
+
+The folder is then excluded from normal folder listings.
+
+The repository lookup verifies that the folder belongs to the specified user:
+
+```text
+findByIdAndUserId(folderId, userId)
+```
+
+### Delete Behavior
+
+Deleting an active folder:
+
+```text
+isDeleted = false
+        ↓
+isDeleted = true
+```
+
+Deleting the same folder again has no additional effect.
+
+If the folder does not exist, or does not belong to the specified user, a `FolderDoesNotExistException` is thrown.
+
+### Status Code
+
+```text
+204 No Content
+```
+
+---
+
+## Folder Repository Queries
+
+The current Folder operations use repository queries based on ownership and deletion state:
+
+```text
+findByIdAndUserId(...)
+findByIdAndUserIdAndIsDeletedFalse(...)
+findByUserIdAndIsDeletedFalse(...)
+```
+
+This ensures that folder operations are performed only on folders belonging to the requested user.
+
+---
+
+## Current Folder API Summary
+
+```text
+POST   /users/{userId}/folders
+GET    /users/{userId}/folders
+PUT    /users/{userId}/folders/{folderId}
+DELETE /users/{userId}/folders/{folderId}
+```
+
+### Current Design Decisions
+
+* Folder → User relationship is unidirectional.
+* Folders use soft deletion.
+* Deleted folders are excluded from normal listings.
+* DELETE is idempotent for an existing folder.
+* Folder operations verify user ownership.
+* Folder listing does not use pagination.
+* Nested folders are not implemented yet.
+* Restoring deleted folders is not implemented yet.
+* Assigning notes to folders is not implemented yet.
 
 ---
 
@@ -764,7 +1038,6 @@ private List<Note> userNotes;
 
 The following entities are planned but are **not implemented yet**:
 
-* Folder
 * Attachment
 * Tag
 * Study Session
@@ -778,10 +1051,6 @@ Planned relationships will be designed before implementation.
 
 ## Folder
 
-* Create folder
-* Update folder
-* Delete folder
-* List folders
 * Assign notes to folders
 * Move notes between folders
 

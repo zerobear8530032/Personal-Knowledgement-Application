@@ -1,9 +1,7 @@
 package com.example.demo.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.example.demo.dtos.FolderResponse;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +20,12 @@ public class Folder {
     Long id;
     String name;
     LocalDateTime createAt;
-    LocalDateTime updateAt;
     boolean isDeleted;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    public FolderResponse toDTO(){
+        return new FolderResponse(this.id,this.name,this.createAt,this.isDeleted,this.user.getId());
+    }
 }

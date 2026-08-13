@@ -19,6 +19,8 @@ public class CreateNoteRequest {
     @NotNull
     private String content;
 
+    Long folderId;
+
     public Note toEntity(){
         Note note= new Note();
         note.setContent(this.getContent());
