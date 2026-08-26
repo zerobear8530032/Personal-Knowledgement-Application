@@ -11,6 +11,8 @@ import lombok.ToString;
 import org.hibernate.annotations.Fetch;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -39,12 +41,16 @@ public class Note {
         noteResponse.setCreatedAt(this.createdAt);
         noteResponse.setUpdatedAt(this.updatedAt);
         noteResponse.setUserId(this.user.getId());
+            noteResponse.setAttachmentList(this.getAttachmentList().stream().map(a->a.toDTO()).toList());
+
         return noteResponse;
     }
 
     @ManyToOne(optional = true , fetch = FetchType.LAZY)
     Folder folder;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    Attach
+    @OneToMany(mappedBy = "note", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    List<Attachment> attachmentList = new ArrayList<>();
+
+
 }

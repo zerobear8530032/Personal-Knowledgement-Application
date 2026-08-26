@@ -68,13 +68,13 @@ public class NoteService {
     @Transactional(readOnly = true)
     public NoteResponse getNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
-        return NoteResponse.toDTO(note);
+        return note.toDTO();
     }
 
     @Transactional(readOnly = true)
     public Page<NoteResponse> getAllNotes(PageRequest pageRequest){
-        NoteResponse mapper= new NoteResponse();
-        Page<NoteResponse> notes= noteRepository.findAll(pageRequest).map(note -> mapper.toDTO(note));
+
+        Page<NoteResponse> notes= noteRepository.findAll(pageRequest).map(note -> note.toDTO());
         return  notes;
     }
 

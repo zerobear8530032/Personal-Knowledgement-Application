@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @ToString
@@ -30,30 +31,9 @@ public class NoteResponse {
         private LocalDateTime createdAt;
         @NotNull
         private LocalDateTime updatedAt;
-
+        private List<AttachmentResponse>  attachmentList;
         private Long  userId;
         private Long folderId;
 
-        public static NoteResponse toDTO(Note note){
-            NoteResponse noteResponse = new NoteResponse();
-            noteResponse.setId(note.getId());
-            noteResponse.setTitle(note.getTitle());
-            noteResponse.setContent(note.getContent());
-            noteResponse.setCreatedAt(note.getCreatedAt());
-            noteResponse.setUpdatedAt(note.getUpdatedAt());
-            noteResponse.setUserId(note.getUser().getId());
-            if(note.getFolder()!=null){
-                noteResponse.setFolderId(note.getFolder().getId());
-            }
-            return noteResponse;
-        }
-        public static Note toEntity(NoteResponse noteResponse){
-            Note note= new Note();
-            note.setId(noteResponse.getId());
-            note.setTitle(noteResponse.getTitle());
-            note.setContent(noteResponse.getContent());
-            note.setCreatedAt(noteResponse.getCreatedAt());
-            note.setUpdatedAt(noteResponse.getUpdatedAt());
-            return note;
-        }
+
 }

@@ -7,12 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class NoteNameResponse {
-
     Long id;
     @NotBlank
     String title;
-
-
-
-
 }
