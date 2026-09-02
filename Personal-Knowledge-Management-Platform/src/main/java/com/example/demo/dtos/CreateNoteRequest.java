@@ -21,11 +21,5 @@ public class CreateNoteRequest {
 
     Long folderId;
 
-    public Note toEntity(){
-        Note note= new Note();
-        note.setContent(this.getContent());
-        note.setTitle(this.getTitle());
-        return note;
-    }
 
 }

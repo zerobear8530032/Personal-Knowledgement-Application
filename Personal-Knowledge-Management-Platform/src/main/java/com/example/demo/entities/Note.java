@@ -33,19 +33,6 @@ public class Note {
     @JoinColumn(name = "user_id" , nullable = false)
     User user;
 
-    public NoteResponse toDTO(){
-        NoteResponse noteResponse= new NoteResponse();
-        noteResponse.setId(this.id);
-        noteResponse.setTitle(this.title);
-        noteResponse.setContent(this.content);
-        noteResponse.setCreatedAt(this.createdAt);
-        noteResponse.setUpdatedAt(this.updatedAt);
-        noteResponse.setUserId(this.user.getId());
-            noteResponse.setAttachmentList(this.getAttachmentList().stream().map(a->a.toDTO()).toList());
-
-        return noteResponse;
-    }
-
     @ManyToOne(optional = true , fetch = FetchType.LAZY)
     Folder folder;
 

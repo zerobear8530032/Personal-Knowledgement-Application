@@ -12,4 +12,5 @@ public class AttachmentResponse {
     String fileName;
     String fileType;
     long size;
+    Long noteId;
 }

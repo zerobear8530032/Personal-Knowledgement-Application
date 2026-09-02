@@ -35,6 +35,6 @@ public class Attachment {
 
 
     public AttachmentResponse toDTO(){
-        return new AttachmentResponse(id,originalName,fileType,size);
+        return new AttachmentResponse(id,originalName,fileType,size,note.getId());
     }
 }

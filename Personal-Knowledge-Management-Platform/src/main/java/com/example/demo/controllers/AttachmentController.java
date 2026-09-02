@@ -47,6 +47,8 @@ public class AttachmentController {
             page=0;
         }
         PageRequest pageRequest= PageRequest.of(page,size,direction,sortBy.getValue());
+        System.out.println("PAGE SIZE: " + pageRequest.getPageSize());
+        System.out.println("PAGE NUMBER: " + pageRequest.getPageNumber());
         Page<AttachmentResponse> response= attachmentService.getAllAttachment(userId,pageRequest);
         return new ResponseEntity<>(ApiResponse.success("data fetched",response), HttpStatus.OK);
     }

@@ -6,6 +6,7 @@ import com.example.demo.entities.Folder;
 import com.example.demo.entities.User;
 import com.example.demo.exceptions.FolderDoesNotExistException;
 import com.example.demo.exceptions.UserNotFoundException;
+import com.example.demo.mappers.FolderMapper;
 import com.example.demo.repositories.FolderRepository;
 import com.example.demo.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,15 @@ import java.util.List;
 
 @Service
 public class FolderService {
-    FolderRepository folderRepository;
-    UserRepository userRepository;
+    private final FolderRepository folderRepository;
+    private final UserRepository userRepository;
+    private final FolderMapper folderMapper;
 
     @Autowired
-    public FolderService(FolderRepository folderRepository, UserRepository userRepository) {
+    public FolderService(FolderRepository folderRepository, UserRepository userRepository, FolderMapper folderMapper) {
         this.folderRepository = folderRepository;
         this.userRepository = userRepository;
+        this.folderMapper = folderMapper;
     }
 
 
@@ -34,7 +37,7 @@ public class FolderService {
         folder.setDeleted(false);
         folder.setUser(user);
         Folder newFolder=folderRepository.save(folder);
-        return newFolder.toDTO();
+        return folderMapper.folderEntityToFolderResponse(newFolder);
     }
     public void deleteFolder(Long id,Long userId){
         Folder folder = folderRepository.findByIdAndUserId(id,userId).orElseThrow(()->new FolderDoesNotExistException("Folder does not exists "));
@@ -44,13 +47,13 @@ public class FolderService {
 
     public List<FolderResponse> getUserFolders(Long userId){
         List<Folder> folders= folderRepository.findByUserIdAndIsDeletedFalse(userId);
-        return folders.stream().map(folder -> folder.toDTO()).toList();
+        return folders.stream().map(folder -> folderMapper.folderEntityToFolderResponse(folder)).toList();
     }
 
     public FolderResponse renameFolder(Long folderId, FolderRequest folderRequest,Long userId) {
         Folder folder = folderRepository.findByIdAndUserIdAndIsDeletedFalse(folderId,userId).orElseThrow(()->new FolderDoesNotExistException("Folder does not exists "));
         folder.setName(folderRequest.getFolderName());
         Folder saveFolder =folderRepository.save(folder);
-        return saveFolder.toDTO();
+        return folderMapper.folderEntityToFolderResponse(saveFolder);
     }
 }

@@ -8,6 +8,7 @@ import com.example.demo.entities.User;
 import com.example.demo.exceptions.FileCannotCreateException;
 import com.example.demo.exceptions.NoteNotFoundException;
 import com.example.demo.exceptions.UserNotFoundException;
+import com.example.demo.mappers.AttachmentMapper;
 import com.example.demo.repositories.AttachmentRepository;
 import com.example.demo.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,21 +29,23 @@ import java.util.UUID;
 @Service
 public class AttachmentService {
 
-    AttachmentRepository attachmentRepository;
-    UserRepository userRepository;
+    private final AttachmentRepository attachmentRepository;
+    private final UserRepository userRepository;
+    private final AttachmentMapper attachmentMapper;
 
     @Autowired
-    public  AttachmentService(AttachmentRepository attachmentRepository,UserRepository userRepository){
+    public  AttachmentService(AttachmentRepository attachmentRepository, UserRepository userRepository, AttachmentMapper attachmentMapper){
         this.attachmentRepository=attachmentRepository;
         this.userRepository=userRepository;
+        this.attachmentMapper = attachmentMapper;
     }
 
     public AttachmentResponse getAttachment(Long id) throws FileNotFoundException {
         Attachment attachment= attachmentRepository.findById(id).orElseThrow(()-> new FileNotFoundException(id+ "file does not exists"));
-        return attachment.toDTO();
+        return attachmentMapper.attachmentEntityToResponse(attachment);
     }
     public Page<AttachmentResponse> getAllAttachment(Long id, PageRequest pageRequest) {
-        Page<AttachmentResponse> attachments= attachmentRepository.findAll(pageRequest).map(note -> note.toDTO());
+        Page<AttachmentResponse> attachments= attachmentRepository.findAll(pageRequest).map(attachment -> attachmentMapper.attachmentEntityToResponse(attachment));
         return attachments;
     }
 
@@ -52,15 +55,15 @@ public class AttachmentService {
         attachment.setFileName(uuid);
         attachment.setFileType(file.getContentType());
         attachment.setSize(file.getSize());
-        attachment.setOriginalName(file.getName());
+        attachment.setOriginalName(file.getOriginalFilename());
         User user= userRepository.findById(userId).orElseThrow(()->new UserNotFoundException("user id "+userId+" does not exists"));
         Note note=user.getUserNotes().stream().filter((n) -> n.getId().equals(notesId)).findFirst().orElseThrow(()->new NoteNotFoundException("Note Id "+notesId+" does not exists"));
         attachment.setNote(note);
         String filePath = upload(file,userId);
         if(filePath!=null || !filePath.isBlank()){
             attachment.setUrl(filePath);
-            Attachment savedAttchment= attachment= attachmentRepository.save(attachment);
-            return savedAttchment.toDTO();
+            Attachment savedAttachment= attachment= attachmentRepository.save(attachment);
+            return attachmentMapper.attachmentEntityToResponse(savedAttachment);
         }
         throw new FileCannotCreateException("File cannot be created for some reason");
     }

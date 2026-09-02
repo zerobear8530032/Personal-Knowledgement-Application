@@ -6,6 +6,7 @@ import com.example.demo.dtos.UserResponse;
 import com.example.demo.entities.User;
 import com.example.demo.exceptions.EmailAlreadyRegisteredException;
 import com.example.demo.exceptions.UserNotFoundException;
+import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.Data;
@@ -21,15 +22,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Data
-@ToString
-@NoArgsConstructor
 public class UserService {
-    private UserRepository userRepository;
-    @Autowired
 
-    public UserService(UserRepository userRepository){
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    @Autowired
+    public UserService(UserRepository userRepository,UserMapper userMapper){
         this.userRepository=userRepository;
+        this.userMapper=userMapper;
     }
 
 
@@ -41,21 +42,20 @@ public class UserService {
             throw new EmailAlreadyRegisteredException("Email : "+email+" Already registered");
         }
         registerUser.setPassword(encryptPassword(registerUser.getPassword()));
-        User user= registerUser.toEntity();
+        User user= userMapper.registerUserToEntity(registerUser);
         User savedUser=userRepository.save(user);
-        return UserResponse.toDTO(savedUser);
+        return userMapper.userEntityToUserResponse(savedUser);
     }
 
     @Transactional
     public UserResponse getUser(Long id){
         User user=userRepository.findById(id).orElseThrow(()-> new UserNotFoundException(" User ID "+id+" Not Found"));
-        return UserResponse.toDTO(user);
+        return userMapper.userEntityToUserResponse(user);
     }
 
     @Transactional
     public Page<UserResponse> getAllUsers(PageRequest pageRequest){
-        final UserResponse mapper= new UserResponse();
-        Page<UserResponse> users= userRepository.findAll(pageRequest).map(user -> mapper.toDTO(user));
+        Page<UserResponse> users= userRepository.findAll(pageRequest).map(user -> userMapper.userEntityToUserResponse(user));
         return  users;
     }
 
@@ -70,7 +70,7 @@ public class UserService {
         }
         user.setEmail(email);
         userRepository.save(user);
-        return UserResponse.toDTO(user);
+        return userMapper.userEntityToUserResponse(user);
     }
     @Transactional
     public void deleteUser(Long id){
@@ -78,11 +78,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public String encryptPassword(String password){
+    private String encryptPassword(String password){
         return BCrypt.hashpw(password, BCrypt.gensalt());
-    }
-
-    private String message(String name){
-        return name+" "+name;
     }
 }

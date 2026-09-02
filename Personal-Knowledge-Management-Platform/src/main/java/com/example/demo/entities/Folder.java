@@ -25,7 +25,4 @@ public class Folder {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public FolderResponse toDTO(){
-        return new FolderResponse(this.id,this.name,this.createAt,this.isDeleted,this.user.getId());
-    }
 }
