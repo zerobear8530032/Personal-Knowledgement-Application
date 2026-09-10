@@ -1,6 +1,5 @@
 package com.example.demo.entities;
 
-import com.example.demo.dtos.FolderResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +8,7 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
-@ToString
+@ToString(exclude = "user")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,10 +16,10 @@ import java.time.LocalDateTime;
 public class Folder {
     @Id
     @GeneratedValue(strategy =GenerationType.AUTO)
-    Long id;
-    String name;
-    LocalDateTime createAt;
-    boolean isDeleted;
+    private Long id;
+    private String name;
+    private LocalDateTime createAt;
+    private boolean isDeleted;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

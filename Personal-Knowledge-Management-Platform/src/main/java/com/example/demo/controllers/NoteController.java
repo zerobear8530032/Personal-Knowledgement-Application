@@ -9,6 +9,8 @@ import com.example.demo.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import  org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -111,6 +113,7 @@ public class NoteController {
     }
 
     @PutMapping("/{id}")
+
     public  ResponseEntity<ApiResponse<NoteResponse>> updateNote(@RequestBody UpdateNoteRequest updateNoteRequest , @PathVariable(name = "id") Long id){
         NoteResponse note=noteService.updateNote(id,updateNoteRequest);
         return new ResponseEntity<>(ApiResponse.success("Note update successfully",note), HttpStatus.OK);

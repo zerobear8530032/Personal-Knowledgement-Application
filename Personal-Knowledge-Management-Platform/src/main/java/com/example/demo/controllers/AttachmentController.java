@@ -47,9 +47,7 @@ public class AttachmentController {
             page=0;
         }
         PageRequest pageRequest= PageRequest.of(page,size,direction,sortBy.getValue());
-        System.out.println("PAGE SIZE: " + pageRequest.getPageSize());
-        System.out.println("PAGE NUMBER: " + pageRequest.getPageNumber());
-        Page<AttachmentResponse> response= attachmentService.getAllAttachment(userId,pageRequest);
+        Page<AttachmentResponse> response= attachmentService.getAllNonDeletedAttachments(userId,pageRequest);
         return new ResponseEntity<>(ApiResponse.success("data fetched",response), HttpStatus.OK);
     }
 
@@ -65,11 +63,6 @@ public class AttachmentController {
         MediaType mediaType = MediaTypeFactory
                 .getMediaType(resource)
                 .orElse(MediaType.APPLICATION_OCTET_STREAM);
-        System.out.println("Resource: " + resource);
-        System.out.println("Filename: " + resource.getFilename());
-        System.out.println("Exists: " + resource.exists());
-        System.out.println("Readable: " + resource.isReadable());
-        System.out.println("Size: " + resource.contentLength());
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .body(resource);

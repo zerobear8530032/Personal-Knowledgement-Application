@@ -14,6 +14,9 @@ import com.example.demo.repositories.UserRepository;
 import lombok.Data;
 import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +72,7 @@ public class NoteService {
         return noteMapper.noteEntityToNoteResponse(savedNote);
     }
     @Transactional(readOnly = true)
+    @Cacheable(value = "notes", key = "#id")
     public NoteResponse getNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
         return noteMapper.noteEntityToNoteResponse(note);
@@ -88,6 +92,7 @@ public class NoteService {
     }
 
     @Transactional
+    @CachePut(value = "notes", key = "#id")
     public NoteResponse updateNote(Long id, UpdateNoteRequest noteRequest){
         Note note= noteRepository.findById(id).orElseThrow(()->new NoteNotFoundException("Note ID : "+id+" does not exist in Database" ));
         note.setTitle(noteRequest.getTitle());
@@ -99,6 +104,7 @@ public class NoteService {
 
 
     @Transactional
+    @CacheEvict(value = "notes",key = "#id")
     public void deleteNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
         noteRepository.delete(note);

@@ -50,6 +50,8 @@ public class FolderService {
         return folders.stream().map(folder -> folderMapper.folderEntityToFolderResponse(folder)).toList();
     }
 
+
+
     public FolderResponse renameFolder(Long folderId, FolderRequest folderRequest,Long userId) {
         Folder folder = folderRepository.findByIdAndUserIdAndIsDeletedFalse(folderId,userId).orElseThrow(()->new FolderDoesNotExistException("Folder does not exists "));
         folder.setName(folderRequest.getFolderName());

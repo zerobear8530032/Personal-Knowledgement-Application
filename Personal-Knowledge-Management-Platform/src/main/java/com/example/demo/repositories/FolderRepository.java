@@ -1,5 +1,6 @@
 package com.example.demo.repositories;
 
+import com.example.demo.entities.Attachment;
 import com.example.demo.entities.Folder;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,6 @@ public interface FolderRepository extends JpaRepository<Folder,Long>{
     Optional<Folder> findByIdAndUserId(Long folderId, Long userId);
 
     Optional<Folder> findByIdAndUserIdAndIsDeletedFalse(Long folderId, Long userId);
+
+    List<Folder> findByIsDeleted(boolean b);
 }

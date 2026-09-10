@@ -14,27 +14,26 @@ import lombok.NoArgsConstructor;
 public class Attachment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    Long id;
+    private Long id;
     @NotBlank
-    String fileName;
+    private String fileName;
 //    @NotBlank // nullable for now
-    String url;
+private String url;
 
     @NotBlank
-    String originalName;
+    private String originalName;
 
     @NotBlank
-    String fileType;
+    private String fileType;
 
-    long size;
+    private long size;
+
+    private boolean isDeleted;
 
     @ManyToOne
     @JoinColumn(name = "note_id",nullable = false)
-    Note note;
+    private Note note;
 
 
 
-    public AttachmentResponse toDTO(){
-        return new AttachmentResponse(id,originalName,fileType,size,note.getId());
-    }
 }

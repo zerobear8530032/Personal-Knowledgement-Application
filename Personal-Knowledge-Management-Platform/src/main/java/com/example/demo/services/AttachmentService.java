@@ -49,6 +49,11 @@ public class AttachmentService {
         return attachments;
     }
 
+    public Page<AttachmentResponse> getAllNonDeletedAttachments(Long id , PageRequest pageRequest){
+        Page<AttachmentResponse> attachments= attachmentRepository.findByIsDeleted(false,pageRequest).map(attachment -> attachmentMapper.attachmentEntityToResponse(attachment));
+        return attachments;
+    }
+
     public AttachmentResponse uploadFile(MultipartFile file, Long userId, Long notesId) throws IOException {
         Attachment attachment= new Attachment();
         String uuid= UUID.randomUUID().toString();
