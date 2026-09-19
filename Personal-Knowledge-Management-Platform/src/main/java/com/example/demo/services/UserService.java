@@ -16,6 +16,8 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,11 +28,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository,UserMapper userMapper){
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder){
         this.userRepository=userRepository;
         this.userMapper=userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -79,6 +83,6 @@ public class UserService {
     }
 
     private String encryptPassword(String password){
-        return BCrypt.hashpw(password, BCrypt.gensalt());
+        return passwordEncoder.encode(password);
     }
 }
