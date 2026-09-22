@@ -30,5 +30,6 @@ public class User {
     private String password;
     @OneToMany(mappedBy = "user")
     List<Note> userNotes;
+    String role;
 
 }

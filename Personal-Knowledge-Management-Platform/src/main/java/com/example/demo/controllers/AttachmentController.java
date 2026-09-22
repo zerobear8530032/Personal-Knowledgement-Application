@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dtos.AttachmentResponse;
+import com.example.demo.dtos.PageResponse;
 import com.example.demo.enums.NotesEnum;
 import com.example.demo.response.ApiResponse;
 import com.example.demo.services.AttachmentService;
@@ -37,7 +38,7 @@ public class AttachmentController {
 
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<AttachmentResponse>>> getALlAttachment(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction, @PathVariable(name = "userId") Long userId){
+    public ResponseEntity<ApiResponse<PageResponse<AttachmentResponse>>> getALlAttachment(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction, @PathVariable(name = "userId") Long userId){
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -47,8 +48,19 @@ public class AttachmentController {
             page=0;
         }
         PageRequest pageRequest= PageRequest.of(page,size,direction,sortBy.getValue());
-        Page<AttachmentResponse> response= attachmentService.getAllNonDeletedAttachments(userId,pageRequest);
-        return new ResponseEntity<>(ApiResponse.success("data fetched",response), HttpStatus.OK);
+        Page<AttachmentResponse> attachments= attachmentService.getAllNonDeletedAttachments(userId,pageRequest);
+
+        PageResponse<AttachmentResponse> response = new PageResponse<>(
+                attachments.getContent(),
+                attachments.getNumber(),
+                attachments.getSize(),
+                attachments.getTotalElements(),
+                attachments.getTotalPages(),
+                attachments.isFirst(),
+                attachments.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("fetching all Attachments successfully",response));
+
     }
 
     @PostMapping("notes/{noteId}")

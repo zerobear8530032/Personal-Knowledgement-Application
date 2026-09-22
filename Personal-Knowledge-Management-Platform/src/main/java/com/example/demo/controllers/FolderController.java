@@ -32,6 +32,7 @@ public class FolderController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<FolderResponse>>> getAllFolders(@PathVariable(name = "userId") Long userId){
         List<FolderResponse> folderResponse= folderService.getUserFolders(userId);
+
         return new ResponseEntity<>(ApiResponse.success("fetch all folder names",folderResponse), HttpStatus.OK);
     }
     @DeleteMapping("/{folderId}")

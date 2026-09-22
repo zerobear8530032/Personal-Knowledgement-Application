@@ -47,6 +47,7 @@ public class UserService {
         }
         registerUser.setPassword(encryptPassword(registerUser.getPassword()));
         User user= userMapper.registerUserToEntity(registerUser);
+        user.setRole("USER");
         User savedUser=userRepository.save(user);
         return userMapper.userEntityToUserResponse(savedUser);
     }

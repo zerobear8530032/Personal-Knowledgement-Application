@@ -41,7 +41,7 @@ public class NoteController {
 
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<NoteResponse>>> getAllNotes(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction) {
+    public ResponseEntity<ApiResponse<PageResponse<NoteResponse>>> getAllNotes(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction) {
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -53,10 +53,20 @@ public class NoteController {
         Sort sort=Sort.by(direction, sortBy.getValue());
         PageRequest pageRequest = PageRequest.of(page, size,sort);
         Page<NoteResponse> notes = noteService.getAllNotes(pageRequest);
-        return new ResponseEntity<>(ApiResponse.success("fetching all notes successfully",notes), HttpStatus.OK);
+
+        PageResponse<NoteResponse> response = new PageResponse<>(
+                notes.getContent(),
+                notes.getNumber(),
+                notes.getSize(),
+                notes.getTotalElements(),
+                notes.getTotalPages(),
+                notes.isFirst(),
+                notes.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("fetching all notes successfully",response));
     }
     @GetMapping("/names")
-    public ResponseEntity<ApiResponse<Page<NoteNameResponse>>> getAllNotesNames(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction) {
+    public ResponseEntity<ApiResponse<PageResponse<NoteNameResponse>>> getAllNotesNames(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction) {
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -68,7 +78,18 @@ public class NoteController {
         Sort sort=Sort.by(direction, sortBy.getValue());
         PageRequest pageRequest = PageRequest.of(page, size,sort);
         Page<NoteNameResponse> notes = noteService.getAllNotesName(pageRequest);
-        return new ResponseEntity<>(ApiResponse.success("fetching all notes successfully",notes), HttpStatus.OK);
+
+
+        PageResponse<NoteNameResponse> response = new PageResponse<>(
+                notes.getContent(),
+                notes.getNumber(),
+                notes.getSize(),
+                notes.getTotalElements(),
+                notes.getTotalPages(),
+                notes.isFirst(),
+                notes.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("fetching all notes successfully",response));
     }
 
     @GetMapping("/{id}")
@@ -77,7 +98,7 @@ public class NoteController {
         return new ResponseEntity<>(ApiResponse.success("Fetch note by Id successfully",note), HttpStatus.OK);
     }
     @GetMapping("users/{id}")
-    public ResponseEntity<ApiResponse<Page<NoteResponse>>> getUserNotes(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction,@PathVariable(name = "id") Long id){
+    public ResponseEntity<ApiResponse<PageResponse<NoteResponse>>> getUserNotes(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction,@PathVariable(name = "id") Long id){
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -88,11 +109,21 @@ public class NoteController {
         }
        PageRequest pageRequest= PageRequest.of(page,size,direction,sortBy.getValue());
         Page<NoteResponse> noteResponses = noteService.getAllUserNotes(id,pageRequest);
-        return new ResponseEntity<>(ApiResponse.success("Fetch note by Id successfully",noteResponses), HttpStatus.OK);
+
+        PageResponse<NoteResponse> response = new PageResponse<>(
+                noteResponses.getContent(),
+                noteResponses.getNumber(),
+                noteResponses.getSize(),
+                noteResponses.getTotalElements(),
+                noteResponses.getTotalPages(),
+                noteResponses.isFirst(),
+                noteResponses.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("fetching all notes successfully",response));
     }
 
     @GetMapping("users/{id}/names")
-    public ResponseEntity<ApiResponse<Page<NoteNameResponse>>> getUserNotesNames(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction,@PathVariable(name = "id") Long id){
+    public ResponseEntity<ApiResponse<PageResponse<NoteNameResponse>>> getUserNotesNames(@RequestParam(required = false,name="size", defaultValue = "5")int size, @RequestParam(name="page",required = false , defaultValue = "0") int page , @RequestParam(required = false,name = "sortBy", defaultValue = "ID") NotesEnum  sortBy, @RequestParam(required = false,name="direction" ,defaultValue = "ASC") Sort.Direction direction,@PathVariable(name = "id") Long id){
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -103,7 +134,18 @@ public class NoteController {
         }
        PageRequest pageRequest= PageRequest.of(page,size,direction,sortBy.getValue());
         Page<NoteNameResponse> noteResponses = noteService.getAllUserNotesNames(id,pageRequest);
-        return new ResponseEntity<>(ApiResponse.success("Fetch note by Id successfully",noteResponses), HttpStatus.OK);
+
+        PageResponse<NoteNameResponse> response = new PageResponse<>(
+                noteResponses.getContent(),
+                noteResponses.getNumber(),
+                noteResponses.getSize(),
+                noteResponses.getTotalElements(),
+                noteResponses.getTotalPages(),
+                noteResponses.isFirst(),
+                noteResponses.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("fetching all notes successfully",response));
+
     }
 
     @PostMapping("/users/{id}")

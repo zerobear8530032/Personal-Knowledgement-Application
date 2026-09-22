@@ -24,5 +24,6 @@ public class UserResponse {
     @NotEmpty
     @Size(min = 6,max=100)
     private String email;
+    private String role;
 
 }

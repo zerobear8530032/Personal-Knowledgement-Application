@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.PageResponse;
 import com.example.demo.dtos.RegisterUserRequest;
 import com.example.demo.dtos.UpdateUserRequest;
 import com.example.demo.dtos.UserResponse;
@@ -35,7 +36,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(@RequestParam(name="page",required = false ,defaultValue = "0") int page, @RequestParam(name="size",required = false,defaultValue ="5") int size, @RequestParam(name="sortBy",required = false,defaultValue = "ID") UserEnum sortBy, @RequestParam(name="direction",required = false,defaultValue = "DESC")Sort.Direction direction){
+    public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUsers(@RequestParam(name="page",required = false ,defaultValue = "0") int page, @RequestParam(name="size",required = false,defaultValue ="5") int size, @RequestParam(name="sortBy",required = false,defaultValue = "ID") UserEnum sortBy, @RequestParam(name="direction",required = false,defaultValue = "DESC")Sort.Direction direction){
         if(size>0){
             size= Math.min(MAXPageSize,size);
         }else{
@@ -47,7 +48,16 @@ public class UserController {
         Sort sort=Sort.by(direction,sortBy.getValue());
         PageRequest pageRequest= PageRequest.of(page,size,sort);
         Page<UserResponse> users=userService.getAllUsers(pageRequest);
-        return ResponseEntity.ok(ApiResponse.success("Fetch all users successfully",users));
+        PageResponse<UserResponse> response = new PageResponse<>(
+                users.getContent(),
+                users.getNumber(),
+                users.getSize(),
+                users.getTotalElements(),
+                users.getTotalPages(),
+                users.isFirst(),
+                users.isLast()
+        );
+        return ResponseEntity.ok(ApiResponse.success("Fetch all users successfully",response));
     }
 
     @GetMapping("/{id}")
@@ -56,7 +66,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Fetch user by ID successfully",user));
     }
 
-    @PostMapping
+    @PostMapping("/auth")
     public   ResponseEntity<ApiResponse<UserResponse>>  createUser(@RequestBody RegisterUserRequest registerUser){
         UserResponse user=userService.registerUser(registerUser);
         return new ResponseEntity<ApiResponse<UserResponse>>(ApiResponse.success("Create new User successfully",user), HttpStatus.CREATED);
