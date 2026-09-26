@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.example.demo.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -30,6 +31,7 @@ public class User {
     private String password;
     @OneToMany(mappedBy = "user")
     List<Note> userNotes;
-    String role;
+    @Enumerated(EnumType.STRING)
+    Role role;
 
 }

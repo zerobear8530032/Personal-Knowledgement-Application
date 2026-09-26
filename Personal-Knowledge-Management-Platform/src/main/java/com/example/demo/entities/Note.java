@@ -36,6 +36,8 @@ public class Note {
     @ManyToOne(optional = true , fetch = FetchType.LAZY)
     Folder folder;
 
+    boolean isDeleted;
+
     @OneToMany(mappedBy = "note", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<Attachment> attachmentList = new ArrayList<>();
 

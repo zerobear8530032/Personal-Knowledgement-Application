@@ -1,10 +1,9 @@
 package com.example.demo.exceptions;
 
 import com.example.demo.response.ErrorResponse;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -39,6 +38,10 @@ public class GlobalExceptionHandler {
                         "Email should be unique" ,ex,ex.getMessage()
                 )
         );
+    }
+    @ExceptionHandler(AuthenticationException.class)
+    public  ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex){
+        return new ResponseEntity<>(ErrorResponse.unsuccessfull(ex.getMessage(),ex),HttpStatus.UNAUTHORIZED);
     }
 
 //    @ExceptionHandler(Exception.class)

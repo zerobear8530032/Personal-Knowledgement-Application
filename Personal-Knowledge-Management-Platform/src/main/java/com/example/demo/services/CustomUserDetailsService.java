@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     private final UserDetailsMapper userDetailsMapper;
+    @Autowired
     public CustomUserDetailsService(UserRepository userRepository, UserDetailsMapper userDetailsMapper) {
         this.userRepository = userRepository;
         this.userDetailsMapper = userDetailsMapper;
@@ -21,7 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user=userRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("Email : "+email+" not found exception ."));
+        User user=userRepository.findByEmail(email).orElseThrow(()-> {
+            System.out.println("User not found "+email);
+           return new UsernameNotFoundException("Email : " + email + " not found exception .");
+        });
         CustomUserDetail userDetails=userDetailsMapper.userEntityToCustomUserDetail(user);
         return userDetails;
     }

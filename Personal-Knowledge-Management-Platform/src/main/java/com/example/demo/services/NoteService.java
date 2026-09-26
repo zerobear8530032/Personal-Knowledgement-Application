@@ -47,12 +47,12 @@ public class NoteService {
 
 
     public Page<NoteResponse> getAllUserNotes(Long id, Pageable pageable){
-        Page<NoteResponse> noteResponses= noteRepository.findByUserId(id,pageable).map((note)->noteMapper.noteEntityToNoteResponse(note));
+        Page<NoteResponse> noteResponses= noteRepository.findByUserIdAndIsDeleted(id,false,pageable).map((note)->noteMapper.noteEntityToNoteResponse(note));
         return noteResponses;
     }
 
     public Page<NoteNameResponse> getAllUserNotesNames(Long id, Pageable pageable){
-        Page<NoteNameResponse> noteResponses= noteRepository.findByUserId(id,pageable).map((note)->noteMapper.noteEntityToNoteNameResponse(note));
+        Page<NoteNameResponse> noteResponses= noteRepository.findByUserIdAndIsDeleted(id,false,pageable).map((note)->noteMapper.noteEntityToNoteNameResponse(note));
         return noteResponses;
     }
 
@@ -107,6 +107,7 @@ public class NoteService {
     @CacheEvict(value = "notes",key = "#id")
     public void deleteNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
-        noteRepository.delete(note);
+        note.setDeleted(true);
+        noteRepository.save(note);
     }
 }

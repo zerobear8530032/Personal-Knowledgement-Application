@@ -17,6 +17,7 @@ import lombok.ToString;
 @NoArgsConstructor
 public class UpdateUserRequest {
 
+
     @Email
     @NotNull
     @NotEmpty
@@ -27,10 +28,5 @@ public class UpdateUserRequest {
     @Size(min = 6,max=50)
     private String name;
 
-    public User toEntity(UpdateUserRequest registerUserDTO){
-        User user= new User();
-        user.setEmail(registerUserDTO.email);
-        user.setName(registerUserDTO.name);
-        return user;
-    }
+
 }

@@ -1,6 +1,5 @@
 package com.example.demo.controllers;
 import com.example.demo.dtos.*;
-import com.example.demo.entities.User;
 import com.example.demo.enums.NotesEnum;
 import com.example.demo.response.ApiResponse;
 import com.example.demo.services.NoteService;
@@ -9,8 +8,6 @@ import com.example.demo.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import  org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

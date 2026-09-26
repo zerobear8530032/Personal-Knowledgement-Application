@@ -1,77 +1,47 @@
 package com.example.demo.filters;
 
-import com.example.demo.services.JwtUtils;
+import com.example.demo.services.CustomUserDetailsService;
+import com.example.demo.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-//@Component
+@Component
 public class JwtSecurityFilter extends OncePerRequestFilter {
 
-    private final JwtUtils jwtUtils;
+    private final JwtService jwtService;
 
-    @Autowired
-    public JwtSecurityFilter(JwtUtils jwtUtils) {
-        this.jwtUtils = jwtUtils;
+    public JwtSecurityFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
+
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
-
-        String authHeader = request.getHeader("Authorization");
-
-        // No Authorization header → continue normally
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String authHeader= request.getHeader("Authorization");
+        String token=null;
+        if(authHeader!=null && authHeader.startsWith("Bearer ")){
+            token = authHeader.substring(7);
         }
-
-        String token = authHeader.substring(7);
-
-        try {
-            // Validate signature + expiration
-            if (jwtUtils.validateToken(token)) {
-
-                // Extract identity from JWT
-                String username = jwtUtils.extractClaims(token).getSubject();
-
-                // Create authenticated user
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                Arrays.asList(new SimpleGrantedAuthority("USER"))
-                        );
-
-                // Put authentication into SecurityContext
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
+        if(token!=null && SecurityContextHolder.getContext().getAuthentication()==null){
+            // validate token
+            if (jwtService.isValidateToken(token)) {
+            // set in security context hokder
+                UserDetails userDetails = jwtService.extractUserFromToken(token);
+                UsernamePasswordAuthenticationToken authenticationToken=
+                        new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
-
-        } catch (Exception e) {
-            // Invalid JWT → don't authenticate
-            // Continue so Spring Security can eventually reject it
         }
-
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(request,response);
     }
 }

@@ -10,4 +10,5 @@ import java.util.List;
 
 public interface NoteRepository extends JpaRepository<Note,Long> {
     Page<Note> findByUserId(Long id, Pageable pageable);
+    Page<Note> findByUserIdAndIsDeleted(Long id,boolean deleted, Pageable pageable);
 }

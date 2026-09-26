@@ -1,7 +1,6 @@
 package com.example.demo.services;
 
 import com.example.demo.dtos.AttachmentResponse;
-import com.example.demo.dtos.NoteResponse;
 import com.example.demo.entities.Attachment;
 import com.example.demo.entities.Note;
 import com.example.demo.entities.User;
@@ -128,7 +127,7 @@ public class AttachmentService {
 
     public void deleteFile(Long attachmentId, Long noteId, Long userId) {
         Attachment attachment= attachmentRepository.findByIdAndNoteIdAndNoteUserId(attachmentId,noteId,userId).orElseThrow(()-> new RuntimeException("File not found"));
-        attachmentRepository.deleteById(attachmentId);
-
+        attachment.setDeleted(true);
+        attachmentRepository.save(attachment);
     }
 }

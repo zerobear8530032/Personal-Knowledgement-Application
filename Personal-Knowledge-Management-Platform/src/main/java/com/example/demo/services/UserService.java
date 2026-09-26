@@ -1,26 +1,23 @@
 package com.example.demo.services;
 
-import com.example.demo.dtos.RegisterUserRequest;
-import com.example.demo.dtos.UpdateUserRequest;
-import com.example.demo.dtos.UserResponse;
+import com.example.demo.dtos.*;
 import com.example.demo.entities.User;
+import com.example.demo.enums.Permissions;
+import com.example.demo.enums.Role;
 import com.example.demo.exceptions.EmailAlreadyRegisteredException;
 import com.example.demo.exceptions.UserNotFoundException;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,12 +26,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtUtils;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder){
+    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtUtils){
         this.userRepository=userRepository;
         this.userMapper=userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
     }
 
 
@@ -47,7 +48,7 @@ public class UserService {
         }
         registerUser.setPassword(encryptPassword(registerUser.getPassword()));
         User user= userMapper.registerUserToEntity(registerUser);
-        user.setRole("USER");
+        user.setRole(Role.USER);
         User savedUser=userRepository.save(user);
         return userMapper.userEntityToUserResponse(savedUser);
     }
@@ -86,4 +87,23 @@ public class UserService {
     private String encryptPassword(String password){
         return passwordEncoder.encode(password);
     }
+
+    public JwtResponse loginUser(LoginRequest loginRequest){
+        String userEmail= loginRequest.getEmail();
+        String userPassword= loginRequest.getPassword();
+        try{
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(userEmail,userPassword)
+            );
+        }catch (AuthenticationException e){
+
+            throw e;
+        }
+        User user = userRepository.findByEmail(userEmail).orElseThrow(()-> new UserNotFoundException("User Email "+userEmail+ " not found."));
+
+        String jwtToken = jwtUtils.generateToken(userEmail,user.getId());
+        return new JwtResponse( jwtToken);
+    }
+
+
 }
