@@ -28,7 +28,10 @@ public class FolderService {
         this.folderMapper = folderMapper;
     }
 
-
+    public List<FolderResponse> getAllFolders(){
+        List<Folder> folders= folderRepository.findAll();
+        return folders.stream().map(folder -> folderMapper.folderEntityToFolderResponse(folder)).toList();
+    }
     public FolderResponse createFolder(FolderRequest folderRequest, Long userId){
         User user = userRepository.findById(userId).orElseThrow(()->new UserNotFoundException("User Id "+userId+" Not Found"));
         Folder folder= new Folder();
@@ -57,5 +60,17 @@ public class FolderService {
         folder.setName(folderRequest.getFolderName());
         Folder saveFolder =folderRepository.save(folder);
         return folderMapper.folderEntityToFolderResponse(saveFolder);
+    }
+
+    public void deleteAnyFolder(Long folderId) {
+        Folder folder = folderRepository.findById(folderId).orElseThrow(()->new FolderDoesNotExistException("Folder does not exists "));
+        folder.setDeleted(true);
+        folderRepository.save(folder);
+    }
+
+    public List<FolderResponse> getAllNotDeletedFolders() {
+        List<Folder> folders= folderRepository.findByIsDeletedFalse();
+        return folders.stream().map(folder -> folderMapper.folderEntityToFolderResponse(folder)).toList();
+
     }
 }

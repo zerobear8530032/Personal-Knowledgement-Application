@@ -1,6 +1,7 @@
 package com.example.demo.Utility;
 
 import com.example.demo.dtos.CustomUserDetail;
+import com.example.demo.enums.NotesEnum;
 import com.example.demo.enums.UserEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -48,4 +49,17 @@ public class Utility {
         return pageRequest;
     }
 
+    public PageRequest getPagination(int size, int page, NotesEnum sortBy, Sort.Direction direction) {
+        if (size <= 0) {
+            size = 5;
+        } else {
+            size = Math.min(maxPageSize, size);
+        }
+        if(page<0){
+            page=0;
+        }
+        Sort sort=Sort.by(direction,sortBy.getValue());
+        PageRequest pageRequest= PageRequest.of(page,size,sort);
+        return pageRequest;
+    }
 }

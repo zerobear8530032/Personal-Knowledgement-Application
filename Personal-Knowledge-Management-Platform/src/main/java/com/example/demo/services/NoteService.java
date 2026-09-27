@@ -72,7 +72,6 @@ public class NoteService {
         return noteMapper.noteEntityToNoteResponse(savedNote);
     }
     @Transactional(readOnly = true)
-    @Cacheable(value = "notes", key = "#id")
     public NoteResponse getNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
         return noteMapper.noteEntityToNoteResponse(note);
@@ -92,7 +91,6 @@ public class NoteService {
     }
 
     @Transactional
-    @CachePut(value = "notes", key = "#id")
     public NoteResponse updateNote(Long id, UpdateNoteRequest noteRequest){
         Note note= noteRepository.findById(id).orElseThrow(()->new NoteNotFoundException("Note ID : "+id+" does not exist in Database" ));
         note.setTitle(noteRequest.getTitle());
@@ -104,10 +102,14 @@ public class NoteService {
 
 
     @Transactional
-    @CacheEvict(value = "notes",key = "#id")
     public void deleteNote(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
         note.setDeleted(true);
         noteRepository.save(note);
+    }
+
+    public NoteResponse getUserNote(Long noteId, Long userId) {
+        Note note = noteRepository.findByUserIdAndIdAndIsDeleted(userId,noteId,false).orElseThrow(()-> new NoteNotFoundException(" Note ID "+noteId+" Not Found"));
+        return noteMapper.noteEntityToNoteResponse(note);
     }
 }

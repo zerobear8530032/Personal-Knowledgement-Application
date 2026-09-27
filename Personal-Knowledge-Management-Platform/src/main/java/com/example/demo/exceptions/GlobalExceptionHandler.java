@@ -1,6 +1,7 @@
 package com.example.demo.exceptions;
 
 import com.example.demo.response.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -48,6 +49,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public  ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex){
         return new ResponseEntity<>(ErrorResponse.unsuccessfull(ex.getMessage(),ex),HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(ExpiredJwtException.class)
+    public  ResponseEntity<ErrorResponse> handleJwtExpiredException(ExpiredJwtException ex){
+        return new ResponseEntity<>(ErrorResponse.unsuccessfull("Login again",ex),HttpStatus.UNAUTHORIZED);
     }
 
 //    @ExceptionHandler(Exception.class)
