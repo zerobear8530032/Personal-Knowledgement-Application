@@ -88,4 +88,18 @@ public class UserController {
         userService.deleteUser(id);
         return new ResponseEntity<ApiResponse<UserResponse>>(ApiResponse.success("Deleted User sucessfully",null), HttpStatus.OK);
     }
+
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> createUserByAdmin(@RequestBody  CreateUserRequest createUserRequest){
+        UserResponse user=userService.createUser(createUserRequest);
+        return new ResponseEntity<ApiResponse<UserResponse>>(ApiResponse.success("Create new User successfully",user), HttpStatus.CREATED);
+    }
+    @PatchMapping("/updateRole")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@RequestBody  UpdateRoleRequest updateRoleRequest){
+        UserResponse user=userService.updateUserRole(updateRoleRequest);
+        return new ResponseEntity<ApiResponse<UserResponse>>(ApiResponse.success("Updated user successfully",user), HttpStatus.OK);
+    }
 }

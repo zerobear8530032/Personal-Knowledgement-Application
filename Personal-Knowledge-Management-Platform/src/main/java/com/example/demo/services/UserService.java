@@ -5,6 +5,7 @@ import com.example.demo.entities.User;
 import com.example.demo.enums.Permissions;
 import com.example.demo.enums.Role;
 import com.example.demo.exceptions.EmailAlreadyRegisteredException;
+import com.example.demo.exceptions.InvalidRoleException;
 import com.example.demo.exceptions.UserNotFoundException;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.UserRepository;
@@ -106,4 +107,29 @@ public class UserService {
     }
 
 
+
+    @Transactional
+    public UserResponse createUser(CreateUserRequest createUserRequest){
+        String email = createUserRequest.getEmail();
+        Optional<User> emailUser= userRepository.findByEmail(email);
+        if(emailUser.isPresent()){
+            throw new EmailAlreadyRegisteredException("Email : "+email+" Already registered");
+        }
+        createUserRequest.setPassword(encryptPassword(createUserRequest.getPassword()));
+        User user= userMapper.createUserToEntity(createUserRequest);
+        User savedUser=userRepository.save(user);
+        return userMapper.userEntityToUserResponse(savedUser);
+    }
+
+
+    public UserResponse updateUserRole(UpdateRoleRequest updateRoleRequest) {
+        User user= userRepository.findById(updateRoleRequest.getId()).orElseThrow(()-> new UserNotFoundException("User Id "+updateRoleRequest.getId()));
+        try{
+            user.setRole(Role.valueOf(updateRoleRequest.getRole()));
+        }catch (Exception e){
+            throw  new InvalidRoleException(updateRoleRequest.getRole()+"  this role does not exists");
+        }
+        User savedUser= userRepository.save(user);
+        return  userMapper.userEntityToUserResponse(savedUser);
+    }
 }

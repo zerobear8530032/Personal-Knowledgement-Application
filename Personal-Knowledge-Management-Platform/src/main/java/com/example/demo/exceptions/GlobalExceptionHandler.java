@@ -15,10 +15,16 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {NotFoundException.class})
-    public ResponseEntity<ErrorResponse> notFoundErrorsHandlers(Exception e){
-        ErrorResponse response= new ErrorResponse(false,"resource not found",e.getMessage(), LocalDateTime.now());
+    public ResponseEntity<ErrorResponse> notFoundErrorsHandlers(Exception e) {
+        ErrorResponse response = new ErrorResponse(false, "resource not found", e.getMessage(), LocalDateTime.now());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(value = {InvalidRoleException.class})
+    public ResponseEntity<ErrorResponse> invaliRoleErrorsHandlers(Exception e){
+        ErrorResponse response= new ErrorResponse(false,"Invalid Role",e.getMessage(), LocalDateTime.now());
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(value = {MethodArgumentTypeMismatchException.class, IllegalArgumentException.class})
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
             MethodArgumentTypeMismatchException ex) {
