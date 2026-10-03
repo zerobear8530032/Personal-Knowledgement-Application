@@ -1,5 +1,6 @@
 package com.example.demo.services;
 
+import com.example.demo.Utility.Utility;
 import com.example.demo.dtos.*;
 import com.example.demo.entities.Folder;
 import com.example.demo.entities.Note;
@@ -11,12 +12,7 @@ import com.example.demo.mappers.NoteMapper;
 import com.example.demo.repositories.FolderRepository;
 import com.example.demo.repositories.NoteRepository;
 import com.example.demo.repositories.UserRepository;
-import lombok.Data;
-import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 @Service
 
@@ -34,15 +30,17 @@ public class NoteService {
     private final UserRepository userRepository;
     private final FolderRepository folderRepository;
     private final NoteMapper noteMapper;
+    private final Utility utility;
 
 
 
     @Autowired
-    public NoteService(NoteRepository noteRepository, UserRepository userRepository, FolderRepository folderRepository, NoteMapper noteMapper){
+    public NoteService(NoteRepository noteRepository, UserRepository userRepository, FolderRepository folderRepository, NoteMapper noteMapper, Utility utility){
        this.noteRepository=noteRepository;
        this.userRepository=userRepository;
        this.folderRepository=folderRepository;
-        this.noteMapper = noteMapper;
+       this.noteMapper = noteMapper;
+        this.utility = utility;
     }
 
 
@@ -91,7 +89,7 @@ public class NoteService {
     }
 
     @Transactional
-    public NoteResponse updateNote(Long id, UpdateNoteRequest noteRequest){
+    public NoteResponse updateNoteAdmin(Long id, UpdateNoteRequest noteRequest){
         Note note= noteRepository.findById(id).orElseThrow(()->new NoteNotFoundException("Note ID : "+id+" does not exist in Database" ));
         note.setTitle(noteRequest.getTitle());
         note.setContent(noteRequest.getContent());
@@ -102,8 +100,28 @@ public class NoteService {
 
 
     @Transactional
-    public void deleteNote(Long id){
+    public void deleteNoteAdmin(Long id){
         Note note=noteRepository.findById(id).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
+        note.setDeleted(true);
+        noteRepository.save(note);
+    }
+
+    @Transactional
+    public NoteResponse updateNoteUser(Long id, UpdateNoteRequest noteRequest){
+        Long userId = utility.getCurrentLoggedInUserId();
+        Note note= noteRepository.findByIdAndUserIdAndIsDeleted(id,userId,false).orElseThrow(()->new NoteNotFoundException("Note ID : "+id+" does not exist in Database" ));
+        note.setTitle(noteRequest.getTitle());
+        note.setContent(noteRequest.getContent());
+        note.setUpdatedAt(LocalDateTime.now());
+        Note updatedNote=noteRepository.save(note);
+        return noteMapper.noteEntityToNoteResponse(updatedNote);
+    }
+
+
+    @Transactional
+    public void deleteNoteUser(Long id){
+        Long userId = utility.getCurrentLoggedInUserId();
+        Note note=noteRepository.findByIdAndUserIdAndIsDeleted(id,userId,false).orElseThrow(()-> new NoteNotFoundException(" Note ID "+id+" Not Found"));
         note.setDeleted(true);
         noteRepository.save(note);
     }
@@ -111,5 +129,15 @@ public class NoteService {
     public NoteResponse getUserNote(Long noteId, Long userId) {
         Note note = noteRepository.findByUserIdAndIdAndIsDeleted(userId,noteId,false).orElseThrow(()-> new NoteNotFoundException(" Note ID "+noteId+" Not Found"));
         return noteMapper.noteEntityToNoteResponse(note);
+    }
+
+    public Page<NoteResponse> getAllNotDeletedNotes(PageRequest pageRequest) {
+        Page<NoteResponse> noteResponses= noteRepository.findByIsDeleted(false,pageRequest).map((note)->noteMapper.noteEntityToNoteResponse(note));
+        return noteResponses;
+    }
+
+    public Page<NoteNameResponse> getAllNotDeletedNotesName(PageRequest pageRequest) {
+        Page<NoteNameResponse> notes= noteRepository.findByIsDeleted(false,pageRequest).map(note -> noteMapper.noteEntityToNoteNameResponse(note));
+        return  notes;
     }
 }

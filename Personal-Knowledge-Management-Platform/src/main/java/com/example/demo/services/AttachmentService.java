@@ -64,7 +64,7 @@ public class AttachmentService {
         Note note=user.getUserNotes().stream().filter((n) -> n.getId().equals(notesId)).findFirst().orElseThrow(()->new NoteNotFoundException("Note Id "+notesId+" does not exists"));
         attachment.setNote(note);
         String filePath = upload(file,userId);
-        if(filePath!=null || !filePath.isBlank()){
+        if(filePath!=null && !filePath.isBlank()){
             attachment.setUrl(filePath);
             Attachment savedAttachment= attachment= attachmentRepository.save(attachment);
             return attachmentMapper.attachmentEntityToResponse(savedAttachment);
